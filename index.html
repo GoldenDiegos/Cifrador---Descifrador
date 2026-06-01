@@ -869,6 +869,8 @@ let history       = [];
 /* ══════════════════════════════════════════════════════
    RELOJ
 ══════════════════════════════════════════════════════ */
+
+/** Muestra la hora actual en el encabezado. */
 function updateClock() {
   document.getElementById('clock').textContent =
     new Date().toLocaleTimeString('es-MX', { hour12: false });
@@ -878,10 +880,9 @@ updateClock();
 
 /* ══════════════════════════════════════════════════════
    CIFRADO CÉSAR
-   Cada carácter se desplaza +shift posiciones dentro
-   del charset. Es modular: al llegar al final vuelve
-   al inicio.
 ══════════════════════════════════════════════════════ */
+
+/** Aplica el cifrado César al texto con el módulo indicado. */
 function caesarCipher(text, charset, shift) {
   const n = charset.length;
   shift = ((shift % n) + n) % n;
@@ -891,15 +892,16 @@ function caesarCipher(text, charset, shift) {
   }).join('');
 }
 
+/** Revierte el cifrado César dado el módulo original. */
 function caesarDecipher(text, charset, shift) {
   return caesarCipher(text, charset, -shift);
 }
 
 /* ══════════════════════════════════════════════════════
    CIFRADO ATBASH
-   Sustitucion inversa: posicion i → posicion (n-1-i).
-   Es simetrico: la misma funcion cifra y descifra.
 ══════════════════════════════════════════════════════ */
+
+/** Aplica el cifrado Atbash al texto. Funciona igual para cifrar y descifrar. */
 function atbashCipher(text, charset) {
   const n = charset.length;
   return text.split('').map(ch => {
@@ -911,6 +913,8 @@ function atbashCipher(text, charset) {
 /* ══════════════════════════════════════════════════════
    MAPA DE FRECUENCIAS
 ══════════════════════════════════════════════════════ */
+
+/** Genera el conteo de apariciones de cada carácter del charset en el texto. */
 function buildFreqMap(text, charset) {
   const map = {};
   charset.split('').forEach(ch => { map[ch] = 0; });
@@ -920,10 +924,9 @@ function buildFreqMap(text, charset) {
 
 /* ══════════════════════════════════════════════════════
    ÍNDICE DE COINCIDENCIA
-   IC = Σ[n_i*(n_i-1)] / [N*(N-1)]
-   Texto natural español: IC ≈ 0.075
-   Texto aleatorio: IC ≈ 1/n
 ══════════════════════════════════════════════════════ */
+
+/** Calcula el índice estadístico usado para analizar el texto. */
 function indexOfCoincidence(text, charset) {
   const freq = buildFreqMap(text, charset);
   const N = Object.values(freq).reduce((a, b) => a + b, 0);
@@ -936,10 +939,9 @@ function indexOfCoincidence(text, charset) {
 
 /* ══════════════════════════════════════════════════════
    SCORE DE NATURALIDAD
-   Combina IC + proporcion de vocales + espacios para
-   discriminar mejor en textos cortos donde el IC solo
-   es insuficiente.
 ══════════════════════════════════════════════════════ */
+
+/** Evalúa qué tan probable es que el texto sea lenguaje natural. */
 function naturalScore(text, charset) {
   const ic = indexOfCoincidence(text, charset);
   const lower = text.toLowerCase();
@@ -951,9 +953,9 @@ function naturalScore(text, charset) {
 
 /* ══════════════════════════════════════════════════════
    AUTO-DETECCIÓN
-   Prueba Atbash + todos los módulos César. Rankea por
-   score de naturalidad. El primero es el mejor candidato.
 ══════════════════════════════════════════════════════ */
+
+/** Identifica automáticamente el método y módulo de un texto cifrado. */
 function autoDetect(ciphertext, charset) {
   const candidates = [];
   const atbashResult = atbashCipher(ciphertext, charset);
@@ -975,6 +977,8 @@ function autoDetect(ciphertext, charset) {
 /* ══════════════════════════════════════════════════════
    GRÁFICA DE FRECUENCIAS
 ══════════════════════════════════════════════════════ */
+
+/** Dibuja la gráfica de distribución de caracteres del texto. */
 function renderChart(text, charset) {
   const freq = buildFreqMap(text, charset);
   const total = text.length || 1;
@@ -1007,6 +1011,8 @@ function renderChart(text, charset) {
 /* ══════════════════════════════════════════════════════
    ACTUALIZAR IC
 ══════════════════════════════════════════════════════ */
+
+/** Actualiza el indicador visual del índice de análisis en el panel. */
 function updateIC(text, charset) {
   const ic = indexOfCoincidence(text, charset);
   document.getElementById('ic-value').textContent = ic.toFixed(5);
@@ -1022,6 +1028,8 @@ function updateIC(text, charset) {
 /* ══════════════════════════════════════════════════════
    TABLA FUERZA BRUTA
 ══════════════════════════════════════════════════════ */
+
+/** Muestra la tabla de resultados de análisis ordenados por probabilidad. */
 function renderBruteForce(candidates) {
   const cesarCands = candidates.filter(c => c.method === 'César');
   if (!cesarCands.length) return;
@@ -1042,6 +1050,8 @@ function renderBruteForce(candidates) {
 /* ══════════════════════════════════════════════════════
    EJECUTAR
 ══════════════════════════════════════════════════════ */
+
+/** Procesa la operación seleccionada al presionar EJECUTAR. */
 function execute() {
   const charset = document.getElementById('charset').value;
   const text    = document.getElementById('input-text').value;
@@ -1053,6 +1063,7 @@ function execute() {
   else if (currentMode === 'decrypt') runDecrypt();
 }
 
+/** Cifra el texto de entrada y muestra el resultado. */
 function runEncrypt() {
   const charset = document.getElementById('charset').value;
   const text    = document.getElementById('input-text').value;
@@ -1070,6 +1081,7 @@ function runEncrypt() {
   addHistory('CIFRAR', method, shiftUsed, text, result);
 }
 
+/** Descifra el texto de entrada e identifica el método utilizado. */
 function runDecrypt() {
   const charset    = document.getElementById('charset').value;
   const ciphertext = document.getElementById('input-text').value;
@@ -1105,6 +1117,7 @@ const RETO_PHRASES = [
   'la frecuencia revela el secreto',
 ];
 
+/** Genera un nuevo reto de descifrado aleatorio. */
 function generateReto() {
   const charset = document.getElementById('charset').value;
   if (!charset) return;
@@ -1120,6 +1133,7 @@ function generateReto() {
   document.getElementById('input-text').value = ciphered;
 }
 
+/** Revela la solución del reto activo. */
 function revealReto() {
   if (!retoAnswer) return;
   document.getElementById('reto-answer').textContent =
@@ -1132,6 +1146,7 @@ function revealReto() {
 /* ══════════════════════════════════════════════════════
    HISTORIAL
 ══════════════════════════════════════════════════════ */
+/** Registra la operación actual en el historial del panel. */
 function addHistory(op, method, shift, input, output) {
   const ts = new Date().toLocaleTimeString('es-MX', { hour12: false });
   history.unshift({ op, method, shift, input, output, ts });
@@ -1152,6 +1167,7 @@ function addHistory(op, method, shift, input, output) {
   });
 }
 
+/** Limpia el historial de operaciones. */
 function clearHistory() {
   history = [];
   document.getElementById('history-list').innerHTML =
@@ -1161,6 +1177,7 @@ function clearHistory() {
 /* ══════════════════════════════════════════════════════
    UI HELPERS
 ══════════════════════════════════════════════════════ */
+/** Cambia entre los modos Cifrar, Descifrar y Reto. */
 function setMode(mode) {
   currentMode = mode;
   document.querySelectorAll('.mode-btn').forEach((b, i) => {
@@ -1174,6 +1191,7 @@ function setMode(mode) {
   if (mode === 'reto') generateReto();
 }
 
+/** Cambia entre los métodos César y Atbash. */
 function setMethod(method) {
   currentMethod = method;
   document.getElementById('btn-cesar').classList.toggle('active', method === 'cesar');
@@ -1182,6 +1200,7 @@ function setMethod(method) {
   if (document.getElementById('input-text').value) runEncrypt();
 }
 
+/** Sincroniza el valor del módulo entre el campo numérico y el slider. */
 function syncShift(val) {
   const n = parseInt(val);
   if (!isNaN(n) && n > 0) {
@@ -1190,6 +1209,7 @@ function syncShift(val) {
   if (document.getElementById('input-text').value) runEncrypt();
 }
 
+/** Actualiza el análisis y resultado en tiempo real al modificar el texto. */
 function onInputChange() {
   const charset = document.getElementById('charset').value;
   const text    = document.getElementById('input-text').value;
@@ -1197,21 +1217,25 @@ function onInputChange() {
   if (currentMode === 'encrypt' && text) runEncrypt();
 }
 
+/** Actualiza el contador de caracteres del conjunto activo. */
 function updateCharsetSize() {
   document.getElementById('charset-size').textContent =
     document.getElementById('charset').value.length + ' caracteres';
 }
 
+/** Copia el resultado del cifrado al portapapeles. */
 function copyOutput() {
   const el = document.getElementById('output-text');
   navigator.clipboard.writeText(el.textContent.replace('|', '').trim());
 }
 
+/** Copia el texto detectado automáticamente al portapapeles. */
 function copyDetOutput() {
   const el = document.getElementById('det-output');
   navigator.clipboard.writeText(el.textContent.replace('|', '').trim());
 }
 
+/** Limpia todos los campos y reinicia los paneles de análisis. */
 function clearAll() {
   document.getElementById('input-text').value = '';
   document.getElementById('output-text').innerHTML = '_<span class="cursor"></span>';
@@ -1224,6 +1248,7 @@ function clearAll() {
   document.getElementById('ic-interp').textContent = 'Ingresar texto para calcular';
 }
 
+/** Descarga un reporte de la operación actual en formato .txt. */
 function exportTxt() {
   const charset = document.getElementById('charset').value;
   const input   = document.getElementById('input-text').value;
