@@ -608,9 +608,6 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════
-     HEADER
-═══════════════════════════════════════════════ -->
 <header>
   <div class="header-top">
     <div class="header-brand">
@@ -634,14 +631,8 @@
   </div>
 </header>
 
-<!-- ═══════════════════════════════════════════════
-     MAIN
-═══════════════════════════════════════════════ -->
 <main>
 
-  <!-- ─────────────────────────────────────────
-       PANEL IZQUIERDO — Control
-  ───────────────────────────────────────── -->
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">CONTROL</span>
@@ -649,8 +640,7 @@
     </div>
     <div class="panel-body">
 
-      <!-- Set de caracteres -->
-      <div>
+<div>
         <div class="section-label">Conjunto de caracteres</div>
         <label>Set activo (el orden define el cifrado)</label>
         <input type="text" id="charset"
@@ -662,22 +652,20 @@
         </div>
       </div>
 
-      <!-- Modo -->
       <div>
         <div class="section-label">Modo de operacion</div>
         <div class="mode-tabs">
-          <button class="mode-btn active" onclick="lc('encrypt')">CIFRAR</button>
-          <button class="mode-btn"        onclick="lc('decrypt')">DESCIFRAR</button>
-          <button class="mode-btn danger" onclick="lc('reto')">RETO</button>
+          <button class="mode-btn active" onclick="lc('e1')">CIFRAR</button>
+          <button class="mode-btn"        onclick="lc('d1')">DESCIFRAR</button>
+          <button class="mode-btn danger" onclick="lc('r1')">RETO</button>
         </div>
       </div>
 
-      <!-- Sección cifrar -->
       <div id="section-encrypt">
         <div class="section-label">Metodo</div>
         <div class="method-tabs">
-          <button class="method-btn active" id="btn-cesar"  onclick="yg('cesar')">CESAR</button>
-          <button class="method-btn"        id="btn-atbash" onclick="yg('atbash')">ATBASH</button>
+          <button class="method-btn active" id="btn-cesar"  onclick="yg('c1')">CESAR</button>
+          <button class="method-btn"        id="btn-atbash" onclick="yg('a1')">ATBASH</button>
         </div>
 
         <div id="cesar-controls" style="margin-top:12px;">
@@ -692,25 +680,22 @@
         </div>
       </div>
 
-      <!-- Texto -->
-      <div style="flex:1;">
+<div style="flex:1;">
         <div class="section-label">Entrada</div>
         <label id="input-label">Texto en claro</label>
         <textarea id="input-text" oninput="oh()"
           placeholder="Ingresar texto aqui..."></textarea>
       </div>
 
-      <!-- Acciones -->
-      <div id="action-buttons">
+<div id="action-buttons">
         <div class="row">
-          <button class="btn" onclick="execute()" style="flex:1;">EJECUTAR</button>
+          <button class="btn" onclick="ez()" style="flex:1;">EJECUTAR</button>
           <button class="btn outline" onclick="qn()">EXPORTAR</button>
           <button class="btn outline red" onclick="mb()">LIMPIAR</button>
         </div>
       </div>
 
-      <!-- Resultado -->
-      <div id="output-section">
+<div id="output-section">
         <div class="section-label">Resultado</div>
         <div class="output-wrap">
           <div class="output-box" id="output-text">_<span class="cursor"></span></div>
@@ -718,8 +703,7 @@
         </div>
       </div>
 
-      <!-- Reto -->
-      <div id="section-reto" class="hidden">
+<div id="section-reto" class="hidden">
         <div class="reto-wrap">
           <div class="reto-label">// MODO RETO — IDENTIFICA EL CIFRADO</div>
           <label>Texto interceptado:</label>
@@ -738,13 +722,9 @@
     </div>
   </div>
 
-  <!-- ─────────────────────────────────────────
-       PANEL DERECHO — Análisis + Brute Force
-  ───────────────────────────────────────── -->
   <div class="right-grid">
 
-    <!-- Análisis de Frecuencias -->
-    <div class="panel">
+<div class="panel">
       <div class="panel-header">
         <span class="panel-title">ANALISIS DE FRECUENCIAS</span>
         <span class="panel-code">AL-KINDI &mdash; SEC-02</span>
@@ -764,8 +744,7 @@
             </div>
           </div>
 
-          <!-- Detección -->
-          <div id="detection-result" class="hidden">
+<div id="detection-result" class="hidden">
             <div class="section-label">Deteccion automatica</div>
             <div class="detection-wrap" id="det-card">
               <div class="det-method" id="det-method">—</div>
@@ -802,8 +781,7 @@
       </div>
     </div>
 
-    <!-- Fuerza Bruta -->
-    <div class="panel">
+<div class="panel">
       <div class="panel-header">
         <span class="panel-title">FUERZA BRUTA — TODOS LOS MODULOS CESAR</span>
         <span class="panel-code">SEC-03</span>
@@ -827,8 +805,7 @@
       </div>
     </div>
 
-    <!-- Historial -->
-    <div class="panel" style="border-bottom:none;">
+<div class="panel" style="border-bottom:none;">
       <div class="panel-header">
         <span class="panel-title">HISTORIAL DE OPERACIONES</span>
         <span class="panel-code">SEC-04</span>
@@ -848,9 +825,6 @@
   </div>
 </main>
 
-<!-- ═══════════════════════════════════════════════
-     FOOTER
-═══════════════════════════════════════════════ -->
 <footer>
   <p>Basado en el metodo de analisis de frecuencias de Abu Yusuf Yaqub ibn Ishaq al-Kindi &mdash; c. 850 d.C. &mdash; "Risala fi Istikhraj al-Mu'amma"</p>
   <p style="color:var(--amber-dim); letter-spacing:2px;">CRYPTO-CAESAR-ATBASH &mdash; AL-KINDI ENGINE v1.0</p>
@@ -860,8 +834,8 @@
 /* ══════════════════════════════════════════════════════
    ESTADO
 ══════════════════════════════════════════════════════ */
-let _M   = 'encrypt';
-let _T = 'cesar';
+let _M   = 'e1';
+let _T = 'c1';
 let _C     = null;
 let _R    = null;
 let _H       = [];
@@ -1052,15 +1026,15 @@ function dv(candidates) {
 ══════════════════════════════════════════════════════ */
 
 /** Procesa la operación seleccionada al presionar EJECUTAR. */
-function execute() {
+function ez(){
   const charset = document.getElementById('charset').value;
   const text    = document.getElementById('input-text').value;
   if (!charset || !text) return;
   kd();
   gl(text, charset);
   sc(text, charset);
-  if (_M === 'encrypt') mx();
-  else if (_M === 'decrypt') nk();
+  if (_M === 'e1') mx();
+  else if (_M === 'd1') nk();
 }
 
 /** Cifra el texto de entrada y muestra el resultado. */
@@ -1069,7 +1043,7 @@ function mx() {
   const text    = document.getElementById('input-text').value;
   if (!charset || !text) return;
   let result, method, shiftUsed = null;
-  if (_T === 'cesar') {
+  if (_T === 'c1') {
     shiftUsed = parseInt(document.getElementById('shift-num').value) || 3;
     result = qz(text, charset, shiftUsed);
     method = 'César';
@@ -1093,7 +1067,7 @@ function nk() {
   det.classList.remove('hidden');
 
   const card = document.getElementById('det-card');
-  card.className = 'detection-wrap ' + (best.method === 'Atbash' ? 'atbash' : '');
+  card.className = 'detection-wrap ' + (best.method === 'Atbash' ? 'a1' : '');
 
   document.getElementById('det-method').textContent = best.method.toUpperCase();
   document.getElementById('det-method-val').textContent = best.method;
@@ -1122,9 +1096,9 @@ function bp() {
   const charset = document.getElementById('charset').value;
   if (!charset) return;
   const phrase  = _P[Math.floor(Math.random() * _P.length)];
-  const method  = Math.random() > 0.5 ? 'cesar' : 'atbash';
+  const method  = Math.random() > 0.5 ? 'c1' : 'a1';
   const shift   = Math.floor(Math.random() * (charset.length - 1)) + 1;
-  const ciphered = method === 'cesar'
+  const ciphered = method === 'c1'
     ? qz(phrase, charset, shift)
     : nm(phrase, charset);
   _R = { method, shift, plaintext: phrase };
@@ -1137,8 +1111,8 @@ function bp() {
 function fq() {
   if (!_R) return;
   document.getElementById('reto-answer').textContent =
-    `Metodo: ${_R.method === 'cesar' ? 'César' : 'Atbash'}` +
-    (_R.method === 'cesar' ? ` | Modulo: +${_R.shift}` : '') +
+    `Metodo: ${_R.method === 'c1' ? 'César' : 'Atbash'}` +
+    (_R.method === 'c1' ? ` | Modulo: +${_R.shift}` : '') +
     ` | Texto: "${_R.plaintext}"`;
   document.getElementById('reto-reveal').classList.remove('hidden');
 }
@@ -1181,22 +1155,22 @@ function zt() {
 function lc(mode) {
   _M = mode;
   document.querySelectorAll('.mode-btn').forEach((b, i) => {
-    b.classList.toggle('active', ['encrypt','decrypt','reto'][i] === mode);
+    b.classList.toggle('active', ['e1','d1','r1'][i] === mode);
   });
-  document.getElementById('section-encrypt').classList.toggle('hidden', mode === 'reto');
-  document.getElementById('section-reto').classList.toggle('hidden', mode !== 'reto');
-  document.getElementById('input-label').textContent = mode === 'decrypt' ? 'Texto cifrado' : 'Texto en claro';
-  document.getElementById('action-buttons').classList.toggle('hidden', mode === 'reto');
-  document.getElementById('output-section').classList.toggle('hidden', mode === 'reto');
-  if (mode === 'reto') bp();
+  document.getElementById('section-encrypt').classList.toggle('hidden', mode === 'r1');
+  document.getElementById('section-reto').classList.toggle('hidden', mode !== 'r1');
+  document.getElementById('input-label').textContent = mode === 'd1' ? 'Texto cifrado' : 'Texto en claro';
+  document.getElementById('action-buttons').classList.toggle('hidden', mode === 'r1');
+  document.getElementById('output-section').classList.toggle('hidden', mode === 'r1');
+  if (mode === 'r1') bp();
 }
 
 /** Cambia entre los métodos César y Atbash. */
 function yg(method) {
   _T = method;
-  document.getElementById('btn-cesar').classList.toggle('active', method === 'cesar');
-  document.getElementById('btn-atbash').classList.toggle('active', method === 'atbash');
-  document.getElementById('cesar-controls').classList.toggle('hidden', method === 'atbash');
+  document.getElementById('btn-cesar').classList.toggle('active', method === 'c1');
+  document.getElementById('btn-atbash').classList.toggle('active', method === 'a1');
+  document.getElementById('cesar-controls').classList.toggle('hidden', method === 'a1');
   if (document.getElementById('input-text').value) mx();
 }
 
@@ -1214,7 +1188,7 @@ function oh() {
   const charset = document.getElementById('charset').value;
   const text    = document.getElementById('input-text').value;
   if (text && charset) { gl(text, charset); sc(text, charset); }
-  if (_M === 'encrypt' && text) mx();
+  if (_M === 'e1' && text) mx();
 }
 
 /** Actualiza el contador de caracteres del conjunto activo. */
@@ -1253,7 +1227,7 @@ function qn() {
   const charset = document.getElementById('charset').value;
   const input   = document.getElementById('input-text').value;
   const output  = document.getElementById('output-text').textContent.replace('|','').trim();
-  const method  = _T === 'cesar'
+  const method  = _T === 'c1'
     ? `César (modulo: ${document.getElementById('shift-num').value})`
     : 'Atbash';
   const content = [
@@ -1261,7 +1235,7 @@ function qn() {
     'CIPHERLAB — REPORTE DE OPERACION CRIPTOGRAFICA',
     '================================================',
     `Fecha/Hora : ${new Date().toLocaleString('es-MX')}`,
-    `Modo       : ${_M === 'encrypt' ? 'Cifrado' : 'Descifrado'}`,
+    `Modo       : ${_M === 'e1' ? 'Cifrado' : 'Descifrado'}`,
     `Metodo     : ${method}`,
     `Set chars  : ${charset}`,
     '',
