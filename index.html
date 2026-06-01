@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CIPHERLAB — Análisis Criptográfico</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* System monospace stack — sin dependencias externas */
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #080c08;
+      --surface:  #0e120e;
+      --line:     #1e251e;
+      --amber:    #00ff41;
+      --amber-dim:#00aa2a;
+      --red:      #ff3322;
+      --green:    #1a3a1a;
+      --green-lit:#00cc33;
+      --text:     #a8b8a8;
+      --muted:    #5a6e5a;
+      --white:    #d4ead4;
+      --font-mono:'Courier New', 'Lucida Console', monospace;
+      --font-head:'Courier New', 'Lucida Console', monospace;
+      --font-body:'Courier New', 'Lucida Console', monospace;
+    }
+
+    /* Subtle dot grid texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(200,168,75,0.04) 1px, transparent 1px);
+      background-size: 20px 20px;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+    }
+
+    /* ── Scanline effect ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--amber-dim);
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+    }
+
+    .header-brand {
+      padding: 18px 28px;
+      border-right: 1px solid var(--amber-dim);
+    }
+
+    .header-brand h1 {
+      font-family: var(--font-head);
+      font-size: 2.2rem;
+      letter-spacing: 10px;
+      font-weight: bold;
+      color: var(--amber);
+      line-height: 1;
+    }
+
+    .header-brand p {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .header-meta {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 12px 24px;
+      gap: 4px;
+      text-align: right;
+    }
+
+    .header-meta .classification {
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      letter-spacing: 4px;
+      color: var(--red);
+    }
+
+    .header-meta .ref {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    .header-bar {
+      background: var(--amber);
+      height: 2px;
+    }
+
+    .header-ticker {
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      padding: 6px 28px;
+      font-size: 0.72rem;
+      color: var(--amber);
+      letter-spacing: 2px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    /* ── Main layout ── */
+    main {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 0;
+      flex: 1;
+    }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    /* ── Panel base ── */
+    .panel {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .panel-title {
+      font-family: var(--font-head);
+      font-size: 1rem;
+      letter-spacing: 4px;
+      color: var(--amber);
+    }
+
+    .panel-code {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    .panel-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    /* ── Section dividers ── */
+    .section-label {
+      font-size: 0.72rem;
+      color: var(--text);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    /* ── Inputs ── */
+    label {
+      font-size: 0.75rem;
+      color: var(--text);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-top: 1px solid var(--amber-dim);
+      color: var(--amber);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color .15s;
+      letter-spacing: 1px;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus { border-color: var(--amber); }
+
+    textarea { resize: vertical; min-height: 80px; }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--amber);
+      height: 2px;
+    }
+
+    /* ── Mode tabs ── */
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border: 1px solid var(--line);
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--font-head);
+      font-size: 0.9rem;
+      letter-spacing: 3px;
+      padding: 9px 6px;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: center;
+    }
+
+    .mode-btn:last-child { border-right: none; }
+
+    .mode-btn.active {
+      background: var(--amber);
+      color: var(--bg);
+    }
+
+    .mode-btn:hover:not(.active) {
+      background: var(--line);
+      color: var(--text);
+    }
+
+    .mode-btn.danger.active {
+      background: var(--red);
+      color: var(--white);
+    }
+
+    /* ── Method selector ── */
+    .method-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--line);
+    }
+
+    .method-btn {
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: center;
+    }
+
+    .method-btn:last-child { border-right: none; }
+
+    .method-btn.active {
+      background: var(--surface);
+      color: var(--amber);
+      border-bottom: 2px solid var(--amber);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      background: var(--amber);
+      border: none;
+      color: var(--bg);
+      font-family: var(--font-head);
+      font-size: 1rem;
+      letter-spacing: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: opacity .15s;
+      text-transform: uppercase;
+    }
+
+    .btn:hover { opacity: .8; }
+
+    .btn.outline {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      padding: 6px 12px;
+    }
+
+    .btn.outline:hover { border-color: var(--amber-dim); color: var(--text); }
+
+    .btn.red {
+      background: var(--red);
+      color: var(--white);
+    }
+
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── Output box ── */
+    .output-wrap { position: relative; }
+
+    .output-box {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--amber);
+      padding: 10px 12px;
+      min-height: 56px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--amber);
+      word-break: break-all;
+      white-space: pre-wrap;
+      letter-spacing: 1px;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: var(--line);
+      border: none;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 1px;
+      padding: 2px 8px;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover { color: var(--text); }
+
+    /* ── Shift control ── */
+    .shift-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .shift-num {
+      width: 60px;
+      text-align: center;
+      font-size: 1.2rem;
+      color: var(--amber);
+      background: var(--surface);
+      border: 1px solid var(--amber-dim);
+      padding: 4px;
+      font-family: var(--font-head);
+      letter-spacing: 3px;
+    }
+
+    /* ── IC bar ── */
+    .ic-track {
+      height: 3px;
+      background: var(--line);
+      margin-top: 5px;
+    }
+
+    .ic-fill {
+      height: 100%;
+      background: var(--amber);
+      transition: width .4s;
+    }
+
+    /* ── Detection card ── */
+    .detection-wrap {
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--green-lit);
+      background: var(--surface);
+      padding: 12px;
+    }
+
+    .detection-wrap.atbash { border-left-color: var(--amber); }
+    .detection-wrap.unknown { border-left-color: var(--red); }
+
+    .det-method {
+      font-family: var(--font-head);
+      font-size: 1.6rem;
+      letter-spacing: 5px;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .det-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      margin-top: 5px;
+      color: var(--muted);
+    }
+
+    .det-row span { color: var(--text); }
+
+    /* ── Chart ── */
+    .chart-wrap {
+      position: relative;
+      height: 160px;
+      border: 1px solid var(--line);
+      padding: 8px;
+      background: var(--surface);
+    }
+
+    /* ── BF Table ── */
+    .bf-scroll {
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid var(--line);
+    }
+
+    .bf-scroll::-webkit-scrollbar { width: 4px; }
+    .bf-scroll::-webkit-scrollbar-track { background: var(--surface); }
+    .bf-scroll::-webkit-scrollbar-thumb { background: var(--amber-dim); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    thead th {
+      background: var(--surface);
+      color: var(--muted);
+      letter-spacing: 2px;
+      padding: 6px 10px;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--font-head);
+      font-size: 0.82rem;
+    }
+
+    tbody td {
+      padding: 5px 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    tbody tr.best td { color: var(--amber); }
+    tbody tr:hover td { background: rgba(200,168,75,0.04); }
+
+    /* ── History ── */
+    .history-scroll {
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .history-item {
+      background: var(--surface);
+      border-left: 2px solid var(--line);
+      padding: 7px 10px;
+      font-size: 0.65rem;
+    }
+
+    .history-item:hover { border-left-color: var(--amber-dim); }
+
+    .hi-meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 3px;
+    }
+
+    .hi-in  { color: var(--text); word-break: break-all; }
+    .hi-out { color: var(--amber); word-break: break-all; margin-top: 2px; }
+
+    /* ── Reto box ── */
+    .reto-wrap {
+      border: 1px solid var(--red);
+      background: var(--surface);
+      padding: 14px;
+    }
+
+    .reto-label {
+      font-family: var(--font-head);
+      font-size: 0.8rem;
+      letter-spacing: 4px;
+      color: var(--red);
+      margin-bottom: 8px;
+    }
+
+    .reto-cipher {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      color: var(--amber);
+      letter-spacing: 3px;
+      word-break: break-all;
+      margin: 10px 0;
+      padding: 8px;
+      border: 1px solid var(--line);
+      background: var(--bg);
+    }
+
+    /* ── Info rows ── */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+
+    .info-row span { color: var(--text); }
+
+    /* ── Right side grid ── */
+    .right-grid {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--amber-dim);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface);
+    }
+
+    footer p {
+      font-size: 0.58rem;
+      color: var(--text);
+      letter-spacing: 2px;
+    }
+
+    footer .stamp {
+      font-family: var(--font-head);
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      color: var(--amber-dim);
+      border: 1px solid var(--amber-dim);
+      padding: 2px 8px;
+      transform: rotate(-1deg);
+    }
+
+    .hidden { display: none !important; }
+
+    /* ── Animated cursor on output ── */
+    @keyframes blink { 50% { opacity: 0; } }
+    .cursor {
+      display: inline-block;
+      width: 7px;
+      height: 12px;
+      background: var(--amber);
+      animation: blink 1s step-end infinite;
+      vertical-align: middle;
+      margin-left: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════ -->
+<header>
+  <div class="header-top">
+    <div class="header-brand">
+      <h1>CIPHERLAB</h1>
+      <p>Sistema de análisis criptográfico &mdash; César / Atbash</p>
+    </div>
+    <div class="header-meta">
+      <div class="classification">CLASIFICADO</div>
+      <div class="ref">REF: CRYPTO-CAESAR-ATBASH &mdash; AL-KINDI ENGINE v1.0</div>
+      <div class="ref" id="clock">--:--:--</div>
+    </div>
+  </div>
+  <div class="header-bar"></div>
+  <div class="header-ticker" id="ticker">
+    SISTEMA LISTO &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    MOTORES DE ANALISIS ACTIVOS &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    BASADO EN EL METODO DE ABU YUSUF AL-KINDI (850 D.C.) &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    CIFRADO CESAR: DESPLAZAMIENTO MODULAR &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    CIFRADO ATBASH: SUSTITUCION INVERSA &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    INDICE DE COINCIDENCIA: ACTIVO &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════════ -->
+<main>
+
+  <!-- ─────────────────────────────────────────
+       PANEL IZQUIERDO — Control
+  ───────────────────────────────────────── -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">CONTROL</span>
+      <span class="panel-code">SEC-01</span>
+    </div>
+    <div class="panel-body">
+
+      <!-- Set de caracteres -->
+      <div>
+        <div class="section-label">Conjunto de caracteres</div>
+        <label>Set activo (el orden define el cifrado)</label>
+        <input type="text" id="charset"
+          value="abcdefghijklmnñopqrstuvwxyz0123456789 .,;:!?-"
+          oninput="updateCharsetSize(); onInputChange();" />
+        <div class="info-row" style="margin-top:5px;">
+          <span>Longitud del set:</span>
+          <span id="charset-size">45 caracteres</span>
+        </div>
+      </div>
+
+      <!-- Modo -->
+      <div>
+        <div class="section-label">Modo de operacion</div>
+        <div class="mode-tabs">
+          <button class="mode-btn active" onclick="setMode('encrypt')">CIFRAR</button>
+          <button class="mode-btn"        onclick="setMode('decrypt')">DESCIFRAR</button>
+          <button class="mode-btn danger" onclick="setMode('reto')">RETO</button>
+        </div>
+      </div>
+
+      <!-- Sección cifrar -->
+      <div id="section-encrypt">
+        <div class="section-label">Metodo</div>
+        <div class="method-tabs">
+          <button class="method-btn active" id="btn-cesar"  onclick="setMethod('cesar')">CESAR</button>
+          <button class="method-btn"        id="btn-atbash" onclick="setMethod('atbash')">ATBASH</button>
+        </div>
+
+        <div id="cesar-controls" style="margin-top:12px;">
+          <label>Modulo de desplazamiento</label>
+          <div class="shift-row">
+            <input type="text" class="shift-num" id="shift-num" value="3"
+                   oninput="syncShift(this.value)" />
+            <input type="range" id="shift-range" min="1" max="99" value="3"
+                   oninput="document.getElementById('shift-num').value=this.value; runEncrypt();"
+                   style="flex:1;" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Texto -->
+      <div style="flex:1;">
+        <div class="section-label">Entrada</div>
+        <label id="input-label">Texto en claro</label>
+        <textarea id="input-text" oninput="onInputChange()"
+          placeholder="Ingresar texto aqui..."></textarea>
+      </div>
+
+      <!-- Acciones -->
+      <div id="action-buttons">
+        <div class="row">
+          <button class="btn" onclick="execute()" style="flex:1;">EJECUTAR</button>
+          <button class="btn outline" onclick="exportTxt()">EXPORTAR</button>
+          <button class="btn outline red" onclick="clearAll()">LIMPIAR</button>
+        </div>
+      </div>
+
+      <!-- Resultado -->
+      <div id="output-section">
+        <div class="section-label">Resultado</div>
+        <div class="output-wrap">
+          <div class="output-box" id="output-text">_<span class="cursor"></span></div>
+          <button class="copy-btn" onclick="copyOutput()">COPIAR</button>
+        </div>
+      </div>
+
+      <!-- Reto -->
+      <div id="section-reto" class="hidden">
+        <div class="reto-wrap">
+          <div class="reto-label">// MODO RETO — IDENTIFICA EL CIFRADO</div>
+          <label>Texto interceptado:</label>
+          <div class="reto-cipher" id="reto-cipher">—</div>
+          <div class="row">
+            <button class="btn outline" onclick="generateReto()">NUEVO RETO</button>
+            <button class="btn outline" onclick="revealReto()">REVELAR</button>
+          </div>
+          <div id="reto-reveal" class="hidden" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--line);">
+            <label>Respuesta:</label>
+            <div id="reto-answer" style="color:var(--amber); font-size:0.8rem; margin-top:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────
+       PANEL DERECHO — Análisis + Brute Force
+  ───────────────────────────────────────── -->
+  <div class="right-grid">
+
+    <!-- Análisis de Frecuencias -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">ANALISIS DE FRECUENCIAS</span>
+        <span class="panel-code">AL-KINDI &mdash; SEC-02</span>
+      </div>
+      <div class="panel-body" style="flex-direction:row; gap:20px; flex-wrap:wrap;">
+
+        <div style="flex:1; min-width:200px; display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <div class="section-label">Indice de coincidencia (IC)</div>
+            <div class="info-row">
+              <span>IC calculado:</span>
+              <span id="ic-value" style="color:var(--amber); font-family:var(--font-head); font-size:1rem; letter-spacing:2px;">—</span>
+            </div>
+            <div class="ic-track"><div class="ic-fill" id="ic-fill" style="width:0%"></div></div>
+            <div style="font-size:0.6rem; color:var(--muted); margin-top:4px; letter-spacing:1px;" id="ic-interp">
+              Ingresar texto para calcular
+            </div>
+          </div>
+
+          <!-- Detección -->
+          <div id="detection-result" class="hidden">
+            <div class="section-label">Deteccion automatica</div>
+            <div class="detection-wrap" id="det-card">
+              <div class="det-method" id="det-method">—</div>
+              <div class="det-row">
+                <span>Metodo</span>
+                <span id="det-method-val">—</span>
+              </div>
+              <div class="det-row">
+                <span>Modulo</span>
+                <span id="det-module">—</span>
+              </div>
+              <div class="det-row">
+                <span>IC del resultado</span>
+                <span id="det-ic">—</span>
+              </div>
+              <div style="margin-top:8px;">
+                <label>Mejor candidato:</label>
+                <div class="output-wrap" style="margin-top:4px;">
+                  <div class="output-box" id="det-output" style="font-size:0.76rem; min-height:40px;">—</div>
+                  <button class="copy-btn" onclick="copyDetOutput()">COPIAR</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:2; min-width:260px; display:flex; flex-direction:column; gap:8px;">
+          <div class="section-label">Distribucion de caracteres</div>
+          <div class="chart-wrap">
+            <canvas id="freq-chart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Fuerza Bruta -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">FUERZA BRUTA — TODOS LOS MODULOS CESAR</span>
+        <span class="panel-code">SEC-03</span>
+      </div>
+      <div class="panel-body" style="padding:12px;">
+        <div id="bf-placeholder" style="color:var(--muted); font-size:0.72rem; letter-spacing:1px; padding:8px 0;">
+          // Descifrar un texto para ver todos los modulos rankeados por IC
+        </div>
+        <div class="bf-scroll hidden" id="bf-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>MOD</th>
+                <th>IC</th>
+                <th>RESULTADO (PREVIEW)</th>
+              </tr>
+            </thead>
+            <tbody id="bf-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="panel" style="border-bottom:none;">
+      <div class="panel-header">
+        <span class="panel-title">HISTORIAL DE OPERACIONES</span>
+        <span class="panel-code">SEC-04</span>
+      </div>
+      <div class="panel-body" style="padding:12px; gap:8px;">
+        <div style="display:flex; justify-content:flex-end;">
+          <button class="btn outline red" onclick="clearHistory()">LIMPIAR</button>
+        </div>
+        <div class="history-scroll" id="history-list">
+          <div style="color:var(--muted); font-size:0.65rem; letter-spacing:2px; padding:6px 0;">
+            // Sin operaciones registradas
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ═══════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════ -->
+<footer>
+  <p>Basado en el metodo de analisis de frecuencias de Abu Yusuf Yaqub ibn Ishaq al-Kindi &mdash; c. 850 d.C. &mdash; "Risala fi Istikhraj al-Mu'amma"</p>
+  <p style="color:var(--amber-dim); letter-spacing:2px;">CRYPTO-CAESAR-ATBASH &mdash; AL-KINDI ENGINE v1.0</p>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   ESTADO
+══════════════════════════════════════════════════════ */
+let currentMode   = 'encrypt';
+let currentMethod = 'cesar';
+let freqChart     = null;
+let retoAnswer    = null;
+let history       = [];
+
+/* ══════════════════════════════════════════════════════
+   RELOJ
+══════════════════════════════════════════════════════ */
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('es-MX', { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ══════════════════════════════════════════════════════
+   CIFRADO CÉSAR
+   Cada carácter se desplaza +shift posiciones dentro
+   del charset. Es modular: al llegar al final vuelve
+   al inicio.
+══════════════════════════════════════════════════════ */
+function caesarCipher(text, charset, shift) {
+  const n = charset.length;
+  shift = ((shift % n) + n) % n;
+  return text.split('').map(ch => {
+    const idx = charset.indexOf(ch);
+    return idx === -1 ? ch : charset[(idx + shift) % n];
+  }).join('');
+}
+
+function caesarDecipher(text, charset, shift) {
+  return caesarCipher(text, charset, -shift);
+}
+
+/* ══════════════════════════════════════════════════════
+   CIFRADO ATBASH
+   Sustitucion inversa: posicion i → posicion (n-1-i).
+   Es simetrico: la misma funcion cifra y descifra.
+══════════════════════════════════════════════════════ */
+function atbashCipher(text, charset) {
+  const n = charset.length;
+  return text.split('').map(ch => {
+    const idx = charset.indexOf(ch);
+    return idx === -1 ? ch : charset[n - 1 - idx];
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   MAPA DE FRECUENCIAS
+══════════════════════════════════════════════════════ */
+function buildFreqMap(text, charset) {
+  const map = {};
+  charset.split('').forEach(ch => { map[ch] = 0; });
+  text.split('').forEach(ch => { if (map[ch] !== undefined) map[ch]++; });
+  return map;
+}
+
+/* ══════════════════════════════════════════════════════
+   ÍNDICE DE COINCIDENCIA
+   IC = Σ[n_i*(n_i-1)] / [N*(N-1)]
+   Texto natural español: IC ≈ 0.075
+   Texto aleatorio: IC ≈ 1/n
+══════════════════════════════════════════════════════ */
+function indexOfCoincidence(text, charset) {
+  const freq = buildFreqMap(text, charset);
+  const N = Object.values(freq).reduce((a, b) => a + b, 0);
+  if (N < 2) return 0;
+  const num = charset.split('').reduce((s, ch) => {
+    const n = freq[ch] || 0; return s + n * (n - 1);
+  }, 0);
+  return num / (N * (N - 1));
+}
+
+/* ══════════════════════════════════════════════════════
+   SCORE DE NATURALIDAD
+   Combina IC + proporcion de vocales + espacios para
+   discriminar mejor en textos cortos donde el IC solo
+   es insuficiente.
+══════════════════════════════════════════════════════ */
+function naturalScore(text, charset) {
+  const ic = indexOfCoincidence(text, charset);
+  const lower = text.toLowerCase();
+  const vowels = 'aeiouáéíóúü';
+  const vowelRatio = lower.split('').filter(c => vowels.includes(c)).length / (text.length || 1);
+  const spaceRatio = text.split('').filter(c => c === ' ').length / (text.length || 1);
+  return ic * 10 + (1 - Math.abs(vowelRatio - 0.40)) * 0.3 + (1 - Math.abs(spaceRatio - 0.15)) * 0.2;
+}
+
+/* ══════════════════════════════════════════════════════
+   AUTO-DETECCIÓN
+   Prueba Atbash + todos los módulos César. Rankea por
+   score de naturalidad. El primero es el mejor candidato.
+══════════════════════════════════════════════════════ */
+function autoDetect(ciphertext, charset) {
+  const candidates = [];
+  const atbashResult = atbashCipher(ciphertext, charset);
+  candidates.push({
+    method: 'Atbash', shift: null, text: atbashResult,
+    ic: indexOfCoincidence(atbashResult, charset),
+    score: naturalScore(atbashResult, charset)
+  });
+  const n = charset.length;
+  for (let s = 1; s < n; s++) {
+    const decoded = caesarDecipher(ciphertext, charset, s);
+    const ic = indexOfCoincidence(decoded, charset);
+    candidates.push({ method: 'César', shift: s, text: decoded, ic, score: naturalScore(decoded, charset) });
+  }
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates;
+}
+
+/* ══════════════════════════════════════════════════════
+   GRÁFICA DE FRECUENCIAS
+══════════════════════════════════════════════════════ */
+function renderChart(text, charset) {
+  const freq = buildFreqMap(text, charset);
+  const total = text.length || 1;
+  const labels = charset.split('').map(c => c === ' ' ? '·' : c);
+  const data   = charset.split('').map(c => ((freq[c] || 0) / total * 100).toFixed(2));
+  if (freqChart) freqChart.destroy();
+  freqChart = new Chart(document.getElementById('freq-chart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: 'rgba(200,168,75,0.35)',
+        borderColor: 'rgba(200,168,75,0.9)',
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#4a566a', font: { size: 8, family: 'Share Tech Mono' } }, grid: { color: '#1e2533' } },
+        y: { ticks: { color: '#4a566a', font: { size: 8, family: 'Share Tech Mono' } }, grid: { color: '#1e2533' } }
+      }
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   ACTUALIZAR IC
+══════════════════════════════════════════════════════ */
+function updateIC(text, charset) {
+  const ic = indexOfCoincidence(text, charset);
+  document.getElementById('ic-value').textContent = ic.toFixed(5);
+  document.getElementById('ic-fill').style.width = Math.min(ic * 1000, 100) + '%';
+  let interp = ic < 0.03 ? 'Texto aleatorio / set extenso'
+    : ic < 0.055 ? 'Posible texto cifrado'
+    : ic < 0.07  ? 'Texto natural (ingles probable)'
+    : ic < 0.09  ? 'Texto natural (espanol probable)'
+    : 'Alta repeticion de caracteres';
+  document.getElementById('ic-interp').textContent = `// ${ic.toFixed(5)} — ${interp}`;
+}
+
+/* ══════════════════════════════════════════════════════
+   TABLA FUERZA BRUTA
+══════════════════════════════════════════════════════ */
+function renderBruteForce(candidates) {
+  const cesarCands = candidates.filter(c => c.method === 'César');
+  if (!cesarCands.length) return;
+  const tbody = document.getElementById('bf-tbody');
+  const scroll = document.getElementById('bf-scroll');
+  tbody.innerHTML = '';
+  cesarCands.forEach((c, i) => {
+    const tr = document.createElement('tr');
+    if (i === 0) tr.classList.add('best');
+    const preview = c.text.substring(0, 35) + (c.text.length > 35 ? '...' : '');
+    tr.innerHTML = `<td>+${c.shift}</td><td>${c.ic.toFixed(5)}</td><td>${preview}</td>`;
+    tbody.appendChild(tr);
+  });
+  scroll.classList.remove('hidden');
+  document.getElementById('bf-placeholder').classList.add('hidden');
+}
+
+/* ══════════════════════════════════════════════════════
+   EJECUTAR
+══════════════════════════════════════════════════════ */
+function execute() {
+  const charset = document.getElementById('charset').value;
+  const text    = document.getElementById('input-text').value;
+  if (!charset || !text) return;
+  updateCharsetSize();
+  renderChart(text, charset);
+  updateIC(text, charset);
+  if (currentMode === 'encrypt') runEncrypt();
+  else if (currentMode === 'decrypt') runDecrypt();
+}
+
+function runEncrypt() {
+  const charset = document.getElementById('charset').value;
+  const text    = document.getElementById('input-text').value;
+  if (!charset || !text) return;
+  let result, method, shiftUsed = null;
+  if (currentMethod === 'cesar') {
+    shiftUsed = parseInt(document.getElementById('shift-num').value) || 3;
+    result = caesarCipher(text, charset, shiftUsed);
+    method = 'César';
+  } else {
+    result = atbashCipher(text, charset);
+    method = 'Atbash';
+  }
+  document.getElementById('output-text').innerHTML = result + '<span class="cursor"></span>';
+  addHistory('CIFRAR', method, shiftUsed, text, result);
+}
+
+function runDecrypt() {
+  const charset    = document.getElementById('charset').value;
+  const ciphertext = document.getElementById('input-text').value;
+  if (!charset || !ciphertext) return;
+  const candidates = autoDetect(ciphertext, charset);
+  const best = candidates[0];
+
+  const det = document.getElementById('detection-result');
+  det.classList.remove('hidden');
+
+  const card = document.getElementById('det-card');
+  card.className = 'detection-wrap ' + (best.method === 'Atbash' ? 'atbash' : '');
+
+  document.getElementById('det-method').textContent = best.method.toUpperCase();
+  document.getElementById('det-method-val').textContent = best.method;
+  document.getElementById('det-module').textContent = best.shift !== null ? `+${best.shift}` : 'N/A';
+  document.getElementById('det-ic').textContent = best.ic.toFixed(5);
+  document.getElementById('det-output').innerHTML = best.text + '<span class="cursor"></span>';
+
+  renderBruteForce(candidates);
+  addHistory('DESCIFRAR', best.method, best.shift, ciphertext, best.text);
+}
+
+/* ══════════════════════════════════════════════════════
+   MODO RETO
+══════════════════════════════════════════════════════ */
+const RETO_PHRASES = [
+  'la seguridad es una ilusion',
+  'el conocimiento es poder',
+  'atacar para defender',
+  'cifrar es el arte de ocultar',
+  'el hacker etico protege sistemas',
+  'la frecuencia revela el secreto',
+];
+
+function generateReto() {
+  const charset = document.getElementById('charset').value;
+  if (!charset) return;
+  const phrase  = RETO_PHRASES[Math.floor(Math.random() * RETO_PHRASES.length)];
+  const method  = Math.random() > 0.5 ? 'cesar' : 'atbash';
+  const shift   = Math.floor(Math.random() * (charset.length - 1)) + 1;
+  const ciphered = method === 'cesar'
+    ? caesarCipher(phrase, charset, shift)
+    : atbashCipher(phrase, charset);
+  retoAnswer = { method, shift, plaintext: phrase };
+  document.getElementById('reto-cipher').textContent = ciphered;
+  document.getElementById('reto-reveal').classList.add('hidden');
+  document.getElementById('input-text').value = ciphered;
+}
+
+function revealReto() {
+  if (!retoAnswer) return;
+  document.getElementById('reto-answer').textContent =
+    `Metodo: ${retoAnswer.method === 'cesar' ? 'César' : 'Atbash'}` +
+    (retoAnswer.method === 'cesar' ? ` | Modulo: +${retoAnswer.shift}` : '') +
+    ` | Texto: "${retoAnswer.plaintext}"`;
+  document.getElementById('reto-reveal').classList.remove('hidden');
+}
+
+/* ══════════════════════════════════════════════════════
+   HISTORIAL
+══════════════════════════════════════════════════════ */
+function addHistory(op, method, shift, input, output) {
+  const ts = new Date().toLocaleTimeString('es-MX', { hour12: false });
+  history.unshift({ op, method, shift, input, output, ts });
+  const list = document.getElementById('history-list');
+  list.innerHTML = '';
+  history.slice(0, 25).forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.innerHTML = `
+      <div class="hi-meta">
+        <span>${h.op} — ${h.method}${h.shift !== null ? ' +'+h.shift : ''}</span>
+        <span>${h.ts}</span>
+      </div>
+      <div class="hi-in">> ${h.input.substring(0, 45)}${h.input.length > 45 ? '...' : ''}</div>
+      <div class="hi-out">< ${h.output.substring(0, 45)}${h.output.length > 45 ? '...' : ''}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function clearHistory() {
+  history = [];
+  document.getElementById('history-list').innerHTML =
+    '<div style="color:var(--muted); font-size:0.65rem; letter-spacing:2px; padding:6px 0;">// Sin operaciones registradas</div>';
+}
+
+/* ══════════════════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════════════════ */
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['encrypt','decrypt','reto'][i] === mode);
+  });
+  document.getElementById('section-encrypt').classList.toggle('hidden', mode === 'reto');
+  document.getElementById('section-reto').classList.toggle('hidden', mode !== 'reto');
+  document.getElementById('input-label').textContent = mode === 'decrypt' ? 'Texto cifrado' : 'Texto en claro';
+  document.getElementById('action-buttons').classList.toggle('hidden', mode === 'reto');
+  document.getElementById('output-section').classList.toggle('hidden', mode === 'reto');
+  if (mode === 'reto') generateReto();
+}
+
+function setMethod(method) {
+  currentMethod = method;
+  document.getElementById('btn-cesar').classList.toggle('active', method === 'cesar');
+  document.getElementById('btn-atbash').classList.toggle('active', method === 'atbash');
+  document.getElementById('cesar-controls').classList.toggle('hidden', method === 'atbash');
+  if (document.getElementById('input-text').value) runEncrypt();
+}
+
+function syncShift(val) {
+  const n = parseInt(val);
+  if (!isNaN(n) && n > 0) {
+    document.getElementById('shift-range').value = Math.min(n, 99);
+  }
+  if (document.getElementById('input-text').value) runEncrypt();
+}
+
+function onInputChange() {
+  const charset = document.getElementById('charset').value;
+  const text    = document.getElementById('input-text').value;
+  if (text && charset) { renderChart(text, charset); updateIC(text, charset); }
+  if (currentMode === 'encrypt' && text) runEncrypt();
+}
+
+function updateCharsetSize() {
+  document.getElementById('charset-size').textContent =
+    document.getElementById('charset').value.length + ' caracteres';
+}
+
+function copyOutput() {
+  const el = document.getElementById('output-text');
+  navigator.clipboard.writeText(el.textContent.replace('|', '').trim());
+}
+
+function copyDetOutput() {
+  const el = document.getElementById('det-output');
+  navigator.clipboard.writeText(el.textContent.replace('|', '').trim());
+}
+
+function clearAll() {
+  document.getElementById('input-text').value = '';
+  document.getElementById('output-text').innerHTML = '_<span class="cursor"></span>';
+  document.getElementById('detection-result').classList.add('hidden');
+  document.getElementById('bf-scroll').classList.add('hidden');
+  document.getElementById('bf-placeholder').classList.remove('hidden');
+  if (freqChart) { freqChart.destroy(); freqChart = null; }
+  document.getElementById('ic-value').textContent = '—';
+  document.getElementById('ic-fill').style.width = '0%';
+  document.getElementById('ic-interp').textContent = 'Ingresar texto para calcular';
+}
+
+function exportTxt() {
+  const charset = document.getElementById('charset').value;
+  const input   = document.getElementById('input-text').value;
+  const output  = document.getElementById('output-text').textContent.replace('|','').trim();
+  const method  = currentMethod === 'cesar'
+    ? `César (modulo: ${document.getElementById('shift-num').value})`
+    : 'Atbash';
+  const content = [
+    '================================================',
+    'CIPHERLAB — REPORTE DE OPERACION CRIPTOGRAFICA',
+    '================================================',
+    `Fecha/Hora : ${new Date().toLocaleString('es-MX')}`,
+    `Modo       : ${currentMode === 'encrypt' ? 'Cifrado' : 'Descifrado'}`,
+    `Metodo     : ${method}`,
+    `Set chars  : ${charset}`,
+    '',
+    'ENTRADA:',
+    input,
+    '',
+    'SALIDA:',
+    output,
+    '',
+    '================================================',
+    'Basado en el metodo de Al-Kindi (850 d.C.)',
+    '================================================',
+  ].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
+  a.download = 'cipherlab-reporte.txt';
+  a.click();
+}
+
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  updateCharsetSize();
+});
+</script>
+</body>
+</html>
