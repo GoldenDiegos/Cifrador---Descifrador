@@ -655,7 +655,7 @@
         <label>Set activo (el orden define el cifrado)</label>
         <input type="text" id="charset"
           value="abcdefghijklmnñopqrstuvwxyz0123456789 .,;:!?-"
-          oninput="updateCharsetSize(); onInputChange();" />
+          oninput="kd(); oh();" />
         <div class="info-row" style="margin-top:5px;">
           <span>Longitud del set:</span>
           <span id="charset-size">45 caracteres</span>
@@ -666,9 +666,9 @@
       <div>
         <div class="section-label">Modo de operacion</div>
         <div class="mode-tabs">
-          <button class="mode-btn active" onclick="setMode('encrypt')">CIFRAR</button>
-          <button class="mode-btn"        onclick="setMode('decrypt')">DESCIFRAR</button>
-          <button class="mode-btn danger" onclick="setMode('reto')">RETO</button>
+          <button class="mode-btn active" onclick="lc('encrypt')">CIFRAR</button>
+          <button class="mode-btn"        onclick="lc('decrypt')">DESCIFRAR</button>
+          <button class="mode-btn danger" onclick="lc('reto')">RETO</button>
         </div>
       </div>
 
@@ -676,17 +676,17 @@
       <div id="section-encrypt">
         <div class="section-label">Metodo</div>
         <div class="method-tabs">
-          <button class="method-btn active" id="btn-cesar"  onclick="setMethod('cesar')">CESAR</button>
-          <button class="method-btn"        id="btn-atbash" onclick="setMethod('atbash')">ATBASH</button>
+          <button class="method-btn active" id="btn-cesar"  onclick="yg('cesar')">CESAR</button>
+          <button class="method-btn"        id="btn-atbash" onclick="yg('atbash')">ATBASH</button>
         </div>
 
         <div id="cesar-controls" style="margin-top:12px;">
           <label>Modulo de desplazamiento</label>
           <div class="shift-row">
             <input type="text" class="shift-num" id="shift-num" value="3"
-                   oninput="syncShift(this.value)" />
+                   oninput="ru(this.value)" />
             <input type="range" id="shift-range" min="1" max="99" value="3"
-                   oninput="document.getElementById('shift-num').value=this.value; runEncrypt();"
+                   oninput="document.getElementById('shift-num').value=this.value; mx();"
                    style="flex:1;" />
           </div>
         </div>
@@ -696,7 +696,7 @@
       <div style="flex:1;">
         <div class="section-label">Entrada</div>
         <label id="input-label">Texto en claro</label>
-        <textarea id="input-text" oninput="onInputChange()"
+        <textarea id="input-text" oninput="oh()"
           placeholder="Ingresar texto aqui..."></textarea>
       </div>
 
@@ -704,8 +704,8 @@
       <div id="action-buttons">
         <div class="row">
           <button class="btn" onclick="execute()" style="flex:1;">EJECUTAR</button>
-          <button class="btn outline" onclick="exportTxt()">EXPORTAR</button>
-          <button class="btn outline red" onclick="clearAll()">LIMPIAR</button>
+          <button class="btn outline" onclick="qn()">EXPORTAR</button>
+          <button class="btn outline red" onclick="mb()">LIMPIAR</button>
         </div>
       </div>
 
@@ -714,7 +714,7 @@
         <div class="section-label">Resultado</div>
         <div class="output-wrap">
           <div class="output-box" id="output-text">_<span class="cursor"></span></div>
-          <button class="copy-btn" onclick="copyOutput()">COPIAR</button>
+          <button class="copy-btn" onclick="xa()">COPIAR</button>
         </div>
       </div>
 
@@ -725,8 +725,8 @@
           <label>Texto interceptado:</label>
           <div class="reto-cipher" id="reto-cipher">—</div>
           <div class="row">
-            <button class="btn outline" onclick="generateReto()">NUEVO RETO</button>
-            <button class="btn outline" onclick="revealReto()">REVELAR</button>
+            <button class="btn outline" onclick="bp()">NUEVO RETO</button>
+            <button class="btn outline" onclick="fq()">REVELAR</button>
           </div>
           <div id="reto-reveal" class="hidden" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--line);">
             <label>Respuesta:</label>
@@ -785,7 +785,7 @@
                 <label>Mejor candidato:</label>
                 <div class="output-wrap" style="margin-top:4px;">
                   <div class="output-box" id="det-output" style="font-size:0.76rem; min-height:40px;">—</div>
-                  <button class="copy-btn" onclick="copyDetOutput()">COPIAR</button>
+                  <button class="copy-btn" onclick="vi()">COPIAR</button>
                 </div>
               </div>
             </div>
@@ -835,7 +835,7 @@
       </div>
       <div class="panel-body" style="padding:12px; gap:8px;">
         <div style="display:flex; justify-content:flex-end;">
-          <button class="btn outline red" onclick="clearHistory()">LIMPIAR</button>
+          <button class="btn outline red" onclick="zt()">LIMPIAR</button>
         </div>
         <div class="history-scroll" id="history-list">
           <div style="color:var(--muted); font-size:0.65rem; letter-spacing:2px; padding:6px 0;">
@@ -860,30 +860,30 @@
 /* ══════════════════════════════════════════════════════
    ESTADO
 ══════════════════════════════════════════════════════ */
-let currentMode   = 'encrypt';
-let currentMethod = 'cesar';
-let freqChart     = null;
-let retoAnswer    = null;
-let history       = [];
+let _M   = 'encrypt';
+let _T = 'cesar';
+let _C     = null;
+let _R    = null;
+let _H       = [];
 
 /* ══════════════════════════════════════════════════════
    RELOJ
 ══════════════════════════════════════════════════════ */
 
 /** Muestra la hora actual en el encabezado. */
-function updateClock() {
+function hx() {
   document.getElementById('clock').textContent =
     new Date().toLocaleTimeString('es-MX', { hour12: false });
 }
-setInterval(updateClock, 1000);
-updateClock();
+setInterval(hx, 1000);
+hx();
 
 /* ══════════════════════════════════════════════════════
    CIFRADO CÉSAR
 ══════════════════════════════════════════════════════ */
 
 /** Aplica el cifrado César al texto con el módulo indicado. */
-function caesarCipher(text, charset, shift) {
+function qz(text, charset, shift) {
   const n = charset.length;
   shift = ((shift % n) + n) % n;
   return text.split('').map(ch => {
@@ -893,8 +893,8 @@ function caesarCipher(text, charset, shift) {
 }
 
 /** Revierte el cifrado César dado el módulo original. */
-function caesarDecipher(text, charset, shift) {
-  return caesarCipher(text, charset, -shift);
+function vb(text, charset, shift) {
+  return qz(text, charset, -shift);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -902,7 +902,7 @@ function caesarDecipher(text, charset, shift) {
 ══════════════════════════════════════════════════════ */
 
 /** Aplica el cifrado Atbash al texto. Funciona igual para cifrar y descifrar. */
-function atbashCipher(text, charset) {
+function nm(text, charset) {
   const n = charset.length;
   return text.split('').map(ch => {
     const idx = charset.indexOf(ch);
@@ -915,7 +915,7 @@ function atbashCipher(text, charset) {
 ══════════════════════════════════════════════════════ */
 
 /** Genera el conteo de apariciones de cada carácter del charset en el texto. */
-function buildFreqMap(text, charset) {
+function rj(text, charset) {
   const map = {};
   charset.split('').forEach(ch => { map[ch] = 0; });
   text.split('').forEach(ch => { if (map[ch] !== undefined) map[ch]++; });
@@ -927,8 +927,8 @@ function buildFreqMap(text, charset) {
 ══════════════════════════════════════════════════════ */
 
 /** Calcula el índice estadístico usado para analizar el texto. */
-function indexOfCoincidence(text, charset) {
-  const freq = buildFreqMap(text, charset);
+function wy(text, charset) {
+  const freq = rj(text, charset);
   const N = Object.values(freq).reduce((a, b) => a + b, 0);
   if (N < 2) return 0;
   const num = charset.split('').reduce((s, ch) => {
@@ -942,8 +942,8 @@ function indexOfCoincidence(text, charset) {
 ══════════════════════════════════════════════════════ */
 
 /** Evalúa qué tan probable es que el texto sea lenguaje natural. */
-function naturalScore(text, charset) {
-  const ic = indexOfCoincidence(text, charset);
+function pk(text, charset) {
+  const ic = wy(text, charset);
   const lower = text.toLowerCase();
   const vowels = 'aeiouáéíóúü';
   const vowelRatio = lower.split('').filter(c => vowels.includes(c)).length / (text.length || 1);
@@ -956,19 +956,19 @@ function naturalScore(text, charset) {
 ══════════════════════════════════════════════════════ */
 
 /** Identifica automáticamente el método y módulo de un texto cifrado. */
-function autoDetect(ciphertext, charset) {
+function tf(ciphertext, charset) {
   const candidates = [];
-  const atbashResult = atbashCipher(ciphertext, charset);
+  const atbashResult = nm(ciphertext, charset);
   candidates.push({
     method: 'Atbash', shift: null, text: atbashResult,
-    ic: indexOfCoincidence(atbashResult, charset),
-    score: naturalScore(atbashResult, charset)
+    ic: wy(atbashResult, charset),
+    score: pk(atbashResult, charset)
   });
   const n = charset.length;
   for (let s = 1; s < n; s++) {
-    const decoded = caesarDecipher(ciphertext, charset, s);
-    const ic = indexOfCoincidence(decoded, charset);
-    candidates.push({ method: 'César', shift: s, text: decoded, ic, score: naturalScore(decoded, charset) });
+    const decoded = vb(ciphertext, charset, s);
+    const ic = wy(decoded, charset);
+    candidates.push({ method: 'César', shift: s, text: decoded, ic, score: pk(decoded, charset) });
   }
   candidates.sort((a, b) => b.score - a.score);
   return candidates;
@@ -979,13 +979,13 @@ function autoDetect(ciphertext, charset) {
 ══════════════════════════════════════════════════════ */
 
 /** Dibuja la gráfica de distribución de caracteres del texto. */
-function renderChart(text, charset) {
-  const freq = buildFreqMap(text, charset);
+function gl(text, charset) {
+  const freq = rj(text, charset);
   const total = text.length || 1;
   const labels = charset.split('').map(c => c === ' ' ? '·' : c);
   const data   = charset.split('').map(c => ((freq[c] || 0) / total * 100).toFixed(2));
-  if (freqChart) freqChart.destroy();
-  freqChart = new Chart(document.getElementById('freq-chart'), {
+  if (_C) _C.destroy();
+  _C = new Chart(document.getElementById('freq-chart'), {
     type: 'bar',
     data: {
       labels,
@@ -1013,8 +1013,8 @@ function renderChart(text, charset) {
 ══════════════════════════════════════════════════════ */
 
 /** Actualiza el indicador visual del índice de análisis en el panel. */
-function updateIC(text, charset) {
-  const ic = indexOfCoincidence(text, charset);
+function sc(text, charset) {
+  const ic = wy(text, charset);
   document.getElementById('ic-value').textContent = ic.toFixed(5);
   document.getElementById('ic-fill').style.width = Math.min(ic * 1000, 100) + '%';
   let interp = ic < 0.03 ? 'Texto aleatorio / set extenso'
@@ -1030,7 +1030,7 @@ function updateIC(text, charset) {
 ══════════════════════════════════════════════════════ */
 
 /** Muestra la tabla de resultados de análisis ordenados por probabilidad. */
-function renderBruteForce(candidates) {
+function dv(candidates) {
   const cesarCands = candidates.filter(c => c.method === 'César');
   if (!cesarCands.length) return;
   const tbody = document.getElementById('bf-tbody');
@@ -1056,37 +1056,37 @@ function execute() {
   const charset = document.getElementById('charset').value;
   const text    = document.getElementById('input-text').value;
   if (!charset || !text) return;
-  updateCharsetSize();
-  renderChart(text, charset);
-  updateIC(text, charset);
-  if (currentMode === 'encrypt') runEncrypt();
-  else if (currentMode === 'decrypt') runDecrypt();
+  kd();
+  gl(text, charset);
+  sc(text, charset);
+  if (_M === 'encrypt') mx();
+  else if (_M === 'decrypt') nk();
 }
 
 /** Cifra el texto de entrada y muestra el resultado. */
-function runEncrypt() {
+function mx() {
   const charset = document.getElementById('charset').value;
   const text    = document.getElementById('input-text').value;
   if (!charset || !text) return;
   let result, method, shiftUsed = null;
-  if (currentMethod === 'cesar') {
+  if (_T === 'cesar') {
     shiftUsed = parseInt(document.getElementById('shift-num').value) || 3;
-    result = caesarCipher(text, charset, shiftUsed);
+    result = qz(text, charset, shiftUsed);
     method = 'César';
   } else {
-    result = atbashCipher(text, charset);
+    result = nm(text, charset);
     method = 'Atbash';
   }
   document.getElementById('output-text').innerHTML = result + '<span class="cursor"></span>';
-  addHistory('CIFRAR', method, shiftUsed, text, result);
+  jw('CIFRAR', method, shiftUsed, text, result);
 }
 
 /** Descifra el texto de entrada e identifica el método utilizado. */
-function runDecrypt() {
+function nk() {
   const charset    = document.getElementById('charset').value;
   const ciphertext = document.getElementById('input-text').value;
   if (!charset || !ciphertext) return;
-  const candidates = autoDetect(ciphertext, charset);
+  const candidates = tf(ciphertext, charset);
   const best = candidates[0];
 
   const det = document.getElementById('detection-result');
@@ -1101,14 +1101,14 @@ function runDecrypt() {
   document.getElementById('det-ic').textContent = best.ic.toFixed(5);
   document.getElementById('det-output').innerHTML = best.text + '<span class="cursor"></span>';
 
-  renderBruteForce(candidates);
-  addHistory('DESCIFRAR', best.method, best.shift, ciphertext, best.text);
+  dv(candidates);
+  jw('DESCIFRAR', best.method, best.shift, ciphertext, best.text);
 }
 
 /* ══════════════════════════════════════════════════════
    MODO RETO
 ══════════════════════════════════════════════════════ */
-const RETO_PHRASES = [
+const _P = [
   'la seguridad es una ilusion',
   'el conocimiento es poder',
   'atacar para defender',
@@ -1118,28 +1118,28 @@ const RETO_PHRASES = [
 ];
 
 /** Genera un nuevo reto de descifrado aleatorio. */
-function generateReto() {
+function bp() {
   const charset = document.getElementById('charset').value;
   if (!charset) return;
-  const phrase  = RETO_PHRASES[Math.floor(Math.random() * RETO_PHRASES.length)];
+  const phrase  = _P[Math.floor(Math.random() * _P.length)];
   const method  = Math.random() > 0.5 ? 'cesar' : 'atbash';
   const shift   = Math.floor(Math.random() * (charset.length - 1)) + 1;
   const ciphered = method === 'cesar'
-    ? caesarCipher(phrase, charset, shift)
-    : atbashCipher(phrase, charset);
-  retoAnswer = { method, shift, plaintext: phrase };
+    ? qz(phrase, charset, shift)
+    : nm(phrase, charset);
+  _R = { method, shift, plaintext: phrase };
   document.getElementById('reto-cipher').textContent = ciphered;
   document.getElementById('reto-reveal').classList.add('hidden');
   document.getElementById('input-text').value = ciphered;
 }
 
 /** Revela la solución del reto activo. */
-function revealReto() {
-  if (!retoAnswer) return;
+function fq() {
+  if (!_R) return;
   document.getElementById('reto-answer').textContent =
-    `Metodo: ${retoAnswer.method === 'cesar' ? 'César' : 'Atbash'}` +
-    (retoAnswer.method === 'cesar' ? ` | Modulo: +${retoAnswer.shift}` : '') +
-    ` | Texto: "${retoAnswer.plaintext}"`;
+    `Metodo: ${_R.method === 'cesar' ? 'César' : 'Atbash'}` +
+    (_R.method === 'cesar' ? ` | Modulo: +${_R.shift}` : '') +
+    ` | Texto: "${_R.plaintext}"`;
   document.getElementById('reto-reveal').classList.remove('hidden');
 }
 
@@ -1147,12 +1147,12 @@ function revealReto() {
    HISTORIAL
 ══════════════════════════════════════════════════════ */
 /** Registra la operación actual en el historial del panel. */
-function addHistory(op, method, shift, input, output) {
+function jw(op, method, shift, input, output) {
   const ts = new Date().toLocaleTimeString('es-MX', { hour12: false });
-  history.unshift({ op, method, shift, input, output, ts });
+  _H.unshift({ op, method, shift, input, output, ts });
   const list = document.getElementById('history-list');
   list.innerHTML = '';
-  history.slice(0, 25).forEach(h => {
+  _H.slice(0, 25).forEach(h => {
     const div = document.createElement('div');
     div.className = 'history-item';
     div.innerHTML = `
@@ -1168,8 +1168,8 @@ function addHistory(op, method, shift, input, output) {
 }
 
 /** Limpia el historial de operaciones. */
-function clearHistory() {
-  history = [];
+function zt() {
+  _H = [];
   document.getElementById('history-list').innerHTML =
     '<div style="color:var(--muted); font-size:0.65rem; letter-spacing:2px; padding:6px 0;">// Sin operaciones registradas</div>';
 }
@@ -1178,8 +1178,8 @@ function clearHistory() {
    UI HELPERS
 ══════════════════════════════════════════════════════ */
 /** Cambia entre los modos Cifrar, Descifrar y Reto. */
-function setMode(mode) {
-  currentMode = mode;
+function lc(mode) {
+  _M = mode;
   document.querySelectorAll('.mode-btn').forEach((b, i) => {
     b.classList.toggle('active', ['encrypt','decrypt','reto'][i] === mode);
   });
@@ -1188,72 +1188,72 @@ function setMode(mode) {
   document.getElementById('input-label').textContent = mode === 'decrypt' ? 'Texto cifrado' : 'Texto en claro';
   document.getElementById('action-buttons').classList.toggle('hidden', mode === 'reto');
   document.getElementById('output-section').classList.toggle('hidden', mode === 'reto');
-  if (mode === 'reto') generateReto();
+  if (mode === 'reto') bp();
 }
 
 /** Cambia entre los métodos César y Atbash. */
-function setMethod(method) {
-  currentMethod = method;
+function yg(method) {
+  _T = method;
   document.getElementById('btn-cesar').classList.toggle('active', method === 'cesar');
   document.getElementById('btn-atbash').classList.toggle('active', method === 'atbash');
   document.getElementById('cesar-controls').classList.toggle('hidden', method === 'atbash');
-  if (document.getElementById('input-text').value) runEncrypt();
+  if (document.getElementById('input-text').value) mx();
 }
 
 /** Sincroniza el valor del módulo entre el campo numérico y el slider. */
-function syncShift(val) {
+function ru(val) {
   const n = parseInt(val);
   if (!isNaN(n) && n > 0) {
     document.getElementById('shift-range').value = Math.min(n, 99);
   }
-  if (document.getElementById('input-text').value) runEncrypt();
+  if (document.getElementById('input-text').value) mx();
 }
 
 /** Actualiza el análisis y resultado en tiempo real al modificar el texto. */
-function onInputChange() {
+function oh() {
   const charset = document.getElementById('charset').value;
   const text    = document.getElementById('input-text').value;
-  if (text && charset) { renderChart(text, charset); updateIC(text, charset); }
-  if (currentMode === 'encrypt' && text) runEncrypt();
+  if (text && charset) { gl(text, charset); sc(text, charset); }
+  if (_M === 'encrypt' && text) mx();
 }
 
 /** Actualiza el contador de caracteres del conjunto activo. */
-function updateCharsetSize() {
+function kd() {
   document.getElementById('charset-size').textContent =
     document.getElementById('charset').value.length + ' caracteres';
 }
 
 /** Copia el resultado del cifrado al portapapeles. */
-function copyOutput() {
+function xa() {
   const el = document.getElementById('output-text');
   navigator.clipboard.writeText(el.textContent.replace('|', '').trim());
 }
 
 /** Copia el texto detectado automáticamente al portapapeles. */
-function copyDetOutput() {
+function vi() {
   const el = document.getElementById('det-output');
   navigator.clipboard.writeText(el.textContent.replace('|', '').trim());
 }
 
 /** Limpia todos los campos y reinicia los paneles de análisis. */
-function clearAll() {
+function mb() {
   document.getElementById('input-text').value = '';
   document.getElementById('output-text').innerHTML = '_<span class="cursor"></span>';
   document.getElementById('detection-result').classList.add('hidden');
   document.getElementById('bf-scroll').classList.add('hidden');
   document.getElementById('bf-placeholder').classList.remove('hidden');
-  if (freqChart) { freqChart.destroy(); freqChart = null; }
+  if (_C) { _C.destroy(); _C = null; }
   document.getElementById('ic-value').textContent = '—';
   document.getElementById('ic-fill').style.width = '0%';
   document.getElementById('ic-interp').textContent = 'Ingresar texto para calcular';
 }
 
 /** Descarga un reporte de la operación actual en formato .txt. */
-function exportTxt() {
+function qn() {
   const charset = document.getElementById('charset').value;
   const input   = document.getElementById('input-text').value;
   const output  = document.getElementById('output-text').textContent.replace('|','').trim();
-  const method  = currentMethod === 'cesar'
+  const method  = _T === 'cesar'
     ? `César (modulo: ${document.getElementById('shift-num').value})`
     : 'Atbash';
   const content = [
@@ -1261,7 +1261,7 @@ function exportTxt() {
     'CIPHERLAB — REPORTE DE OPERACION CRIPTOGRAFICA',
     '================================================',
     `Fecha/Hora : ${new Date().toLocaleString('es-MX')}`,
-    `Modo       : ${currentMode === 'encrypt' ? 'Cifrado' : 'Descifrado'}`,
+    `Modo       : ${_M === 'encrypt' ? 'Cifrado' : 'Descifrado'}`,
     `Metodo     : ${method}`,
     `Set chars  : ${charset}`,
     '',
@@ -1285,7 +1285,7 @@ function exportTxt() {
    INIT
 ══════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  updateCharsetSize();
+  kd();
 });
 </script>
 </body>
