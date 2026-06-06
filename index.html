@@ -247,6 +247,33 @@
       height: 2px;
     }
 
+    input[type="file"] { display: none; }
+
+    .file-drop {
+      border: 1px dashed var(--amber-dim);
+      background: var(--surface);
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .file-meta {
+      color: var(--muted);
+      font-size: 0.68rem;
+      letter-spacing: 1px;
+      word-break: break-all;
+    }
+
+    .file-warn { color: var(--red); }
+
     /* ── Mode tabs ── */
     .mode-tabs {
       display: grid;
@@ -711,6 +738,18 @@
         </div>
       </div>
 
+<div id="file-section">
+        <div class="section-label">Carga de archivo</div>
+        <div class="file-drop">
+          <div class="file-row">
+            <label for="file-input" class="btn outline" style="margin:0; cursor:pointer;">SUBIR TXT</label>
+            <button class="btn outline red" onclick="cf()">QUITAR</button>
+          </div>
+          <input type="file" id="file-input" accept=".txt,.csv,.log,.md,text/plain,text/csv,text/markdown" onchange="sf(this.files)" />
+          <div class="file-meta" id="file-meta">// Sin archivo cargado</div>
+        </div>
+      </div>
+
 <div style="flex:1;">
         <div class="section-label">Entrada</div>
         <label id="input-label">Texto en claro</label>
@@ -909,12 +948,29 @@ function bp(){const cs=document.getElementById('charset').value;if(!cs)return;co
 function fq(){if(!_R)return;document.getElementById('reto-answer').textContent=`Metodo: ${_R.method==='c1'?'César':'Atbash'}`+(_R.method==='c1'?` | Modulo: +${_R.shift}`:'')+` | Texto: "${_R.plaintext}"`;document.getElementById('reto-reveal').classList.remove('hidden');}
 function jw(op,mt,sh,inp,out){const ts=new Date().toLocaleTimeString('es-MX',{hour12:false});_H.unshift({op,method:mt,shift:sh,input:inp,output:out,ts});const l=document.getElementById('history-list');l.innerHTML='';_H.slice(0,25).forEach(h=>{const d=document.createElement('div');const meta=document.createElement('div');const left=document.createElement('span');const right=document.createElement('span');const hi=document.createElement('div');const ho=document.createElement('div');d.className='history-item';meta.className='hi-meta';hi.className='hi-in';ho.className='hi-out';left.textContent=`${h.op} — ${h.method}${h.shift!==null?' +'+h.shift:''}`;right.textContent=h.ts;hi.textContent=`> ${h.input.substring(0,45)}${h.input.length>45?'...':''}`;ho.textContent=`< ${h.output.substring(0,45)}${h.output.length>45?'...':''}`;meta.append(left,right);d.append(meta,hi,ho);l.appendChild(d);});}
 function zt(){_H=[];document.getElementById('history-list').innerHTML='<div style="color:var(--muted);font-size:0.65rem;letter-spacing:2px;padding:6px 0;">// Sin operaciones registradas</div>';}
-function lc(mode){_M=mode;document.querySelectorAll('.mode-btn').forEach((b,i)=>{b.classList.toggle('active',['e1','d1','r1'][i]===mode);});document.getElementById('section-encrypt').classList.toggle('hidden',mode==='r1');document.getElementById('section-reto').classList.toggle('hidden',mode!=='r1');document.getElementById('input-label').textContent=mode==='d1'?'Texto cifrado':'Texto en claro';document.getElementById('action-buttons').classList.toggle('hidden',mode==='r1');document.getElementById('output-section').classList.toggle('hidden',mode==='r1');if(mode==='r1')bp();}
+function lc(mode){_M=mode;document.querySelectorAll('.mode-btn').forEach((b,i)=>{b.classList.toggle('active',['e1','d1','r1'][i]===mode);});document.getElementById('section-encrypt').classList.toggle('hidden',mode==='r1');document.getElementById('section-reto').classList.toggle('hidden',mode!=='r1');document.getElementById('input-label').textContent=mode==='d1'?'Texto cifrado':'Texto en claro';document.getElementById('file-section').classList.toggle('hidden',mode==='r1');document.getElementById('action-buttons').classList.toggle('hidden',mode==='r1');document.getElementById('output-section').classList.toggle('hidden',mode==='r1');if(mode==='r1')bp();}
 function yg(mt){_T=mt;document.getElementById('btn-cesar').classList.toggle('active',mt==='c1');document.getElementById('btn-atbash').classList.toggle('active',mt==='a1');document.getElementById('cesar-controls').classList.toggle('hidden',mt==='a1');if(document.getElementById('input-text').value)mx();}
 function ru(val){const n=parseInt(val),max=Math.max(ix(document.getElementById('charset').value).size-1,1);if(!isNaN(n)&&n>0){document.getElementById('shift-range').value=Math.min(n,max);}if(document.getElementById('input-text').value)mx();}
 function oh(){const cs=document.getElementById('charset').value;const t=document.getElementById('input-text').value;if(t&&cs){gl(t,cs);sc(t,cs);}if(_M==='e1'&&t)mx();}
 function kd(){const size=ix(document.getElementById('charset').value).size;document.getElementById('charset-size').textContent=size+' caracteres';const r=document.getElementById('shift-range');r.max=Math.max(size-1,1);if(parseInt(r.value)>parseInt(r.max))r.value=r.max;}
 function lb(){document.getElementById('charset').value=LAB_CHARSET;document.getElementById('shift-num').value='15';document.getElementById('shift-range').value='15';lc('e1');yg('c1');document.getElementById('input-text').value=LAB_TEXT;kd();oh();}
+function fs(bytes){if(bytes<1024)return bytes+' B';if(bytes<1048576)return (bytes/1024).toFixed(1)+' KB';return (bytes/1048576).toFixed(2)+' MB';}
+function fm(text,warn=false){const el=document.getElementById('file-meta');el.textContent=text;el.classList.toggle('file-warn',warn);}
+function sf(files){
+  const file=files&&files[0];
+  if(!file)return;
+  if(file.size>1048576){fm(`Archivo demasiado grande: ${file.name} (${fs(file.size)}). Limite: 1 MB`,true);return;}
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const text=String(reader.result||'');
+    document.getElementById('input-text').value=text;
+    fm(`Cargado: ${file.name} | ${fs(file.size)} | ${Array.from(text).length} caracteres`);
+    oh();
+  };
+  reader.onerror=()=>fm(`No se pudo leer el archivo: ${file.name}`,true);
+  reader.readAsText(file,'UTF-8');
+}
+function cf(){document.getElementById('file-input').value='';fm('// Sin archivo cargado');mb();}
 function du(cs){const seen=new Set(),dup=[];Array.from(cs).forEach(c=>{if(seen.has(c)&&!dup.includes(c))dup.push(c);seen.add(c);});return dup;}
 function tr(name,pass,detail){return {name,pass,detail};}
 function rt(){
