@@ -521,6 +521,37 @@
     .hi-in  { color: var(--text); word-break: break-all; }
     .hi-out { color: var(--amber); word-break: break-all; margin-top: 2px; }
 
+    /* ── Test console ── */
+    .test-console {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      max-height: 210px;
+      overflow-y: auto;
+    }
+
+    .test-row {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 10px;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+    }
+
+    .test-row:last-child { border-bottom: none; }
+    .test-row.pass .test-status { color: var(--amber); }
+    .test-row.fail .test-status { color: var(--red); }
+
+    .test-status {
+      font-family: var(--font-head);
+      font-size: 0.78rem;
+      letter-spacing: 2px;
+    }
+
+    .test-name { color: var(--text); word-break: break-word; }
+    .test-detail { color: var(--muted); margin-top: 2px; word-break: break-all; }
+
     /* ── Reto box ── */
     .reto-wrap {
       border: 1px solid var(--red);
@@ -562,7 +593,7 @@
     /* ── Right side grid ── */
     .right-grid {
       display: grid;
-      grid-template-rows: auto auto 1fr;
+      grid-template-rows: auto auto auto 1fr;
     }
 
     /* ── Footer ── */
@@ -806,10 +837,31 @@
       </div>
     </div>
 
+<div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">PRUEBAS DE LABORATORIO</span>
+        <span class="panel-code">SEC-04</span>
+      </div>
+      <div class="panel-body" style="padding:12px; gap:8px;">
+        <div class="row" style="align-items:center; justify-content:space-between;">
+          <button class="btn outline" onclick="rt()">EJECUTAR TESTS</button>
+          <div class="info-row" style="gap:12px;">
+            <span>Estado:</span>
+            <span id="test-summary">SIN EJECUTAR</span>
+          </div>
+        </div>
+        <div class="test-console" id="test-list">
+          <div style="color:var(--muted); font-size:0.65rem; letter-spacing:2px; padding:8px 10px;">
+            // Ejecutar pruebas para validar Cesar, Atbash, reversibilidad y set activo
+          </div>
+        </div>
+      </div>
+    </div>
+
 <div class="panel" style="border-bottom:none;">
       <div class="panel-header">
         <span class="panel-title">HISTORIAL DE OPERACIONES</span>
-        <span class="panel-code">SEC-04</span>
+        <span class="panel-code">SEC-05</span>
       </div>
       <div class="panel-body" style="padding:12px; gap:8px;">
         <div style="display:flex; justify-content:flex-end;">
@@ -863,6 +915,48 @@ function ru(val){const n=parseInt(val),max=Math.max(ix(document.getElementById('
 function oh(){const cs=document.getElementById('charset').value;const t=document.getElementById('input-text').value;if(t&&cs){gl(t,cs);sc(t,cs);}if(_M==='e1'&&t)mx();}
 function kd(){const size=ix(document.getElementById('charset').value).size;document.getElementById('charset-size').textContent=size+' caracteres';const r=document.getElementById('shift-range');r.max=Math.max(size-1,1);if(parseInt(r.value)>parseInt(r.max))r.value=r.max;}
 function lb(){document.getElementById('charset').value=LAB_CHARSET;document.getElementById('shift-num').value='15';document.getElementById('shift-range').value='15';lc('e1');yg('c1');document.getElementById('input-text').value=LAB_TEXT;kd();oh();}
+function du(cs){const seen=new Set(),dup=[];Array.from(cs).forEach(c=>{if(seen.has(c)&&!dup.includes(c))dup.push(c);seen.add(c);});return dup;}
+function tr(name,pass,detail){return {name,pass,detail};}
+function rt(){
+  const cs=document.getElementById('charset').value||LAB_CHARSET;
+  const labCs=LAB_CHARSET;
+  const labExpected='A µúñt tú Ñé tÍp}té st +tvÑóxsps m';
+  const sample='{} Seguridad 0123 ABC xyz ñÑ <>';
+  const encrypted=qz(sample,labCs,15);
+  const duplicates=du(cs);
+  const tests=[
+    tr('Calibracion Cesar 15',qz(LAB_TEXT,LAB_CHARSET,15)===labExpected,`Esperado: ${labExpected}`),
+    tr('Descifrado inverso',vb(encrypted,labCs,15)===sample,`Muestra: ${sample}`),
+    tr('Atbash reversible',nm(nm(sample,labCs),labCs)===sample,'Aplicar Atbash dos veces recupera el texto'),
+    tr('Caracteres externos preservados',qz('🙂\n"',labCs,15)==='🙂\n"','Emoji, salto de linea y comillas no estan en el set'),
+    tr('Modulo circular',qz('}',labCs,ix(labCs).size+1)===qz('}',labCs,1),'Modulo mayor al set se normaliza'),
+    tr('Set sin duplicados',duplicates.length===0,duplicates.length?`Duplicados: ${duplicates.join(' ')}`:'Sin caracteres repetidos'),
+    tr('Longitud del set de laboratorio',ix(LAB_CHARSET).size===123,`Longitud detectada: ${ix(LAB_CHARSET).size}`)
+  ];
+  const ok=tests.filter(t=>t.pass).length;
+  const list=document.getElementById('test-list');
+  list.innerHTML='';
+  tests.forEach(t=>{
+    const row=document.createElement('div');
+    const status=document.createElement('div');
+    const body=document.createElement('div');
+    const name=document.createElement('div');
+    const detail=document.createElement('div');
+    row.className=`test-row ${t.pass?'pass':'fail'}`;
+    status.className='test-status';
+    name.className='test-name';
+    detail.className='test-detail';
+    status.textContent=t.pass?'PASS':'FAIL';
+    name.textContent=t.name;
+    detail.textContent=t.detail;
+    body.append(name,detail);
+    row.append(status,body);
+    list.appendChild(row);
+  });
+  const summary=document.getElementById('test-summary');
+  summary.textContent=`${ok}/${tests.length} PASS`;
+  summary.style.color=ok===tests.length?'var(--amber)':'var(--red)';
+}
 function xa(){navigator.clipboard.writeText(document.getElementById('output-text').textContent.replace('|','').trim());}
 function vi(){navigator.clipboard.writeText(document.getElementById('det-output').textContent.replace('|','').trim());}
 function mb(){document.getElementById('input-text').value='';oo('output-text','_');document.getElementById('detection-result').classList.add('hidden');document.getElementById('bf-scroll').classList.add('hidden');document.getElementById('bf-placeholder').classList.remove('hidden');if(_C){_C.destroy();_C=null;}document.getElementById('ic-value').textContent='—';document.getElementById('ic-fill').style.width='0%';document.getElementById('ic-interp').textContent='Ingresar texto para calcular';}
